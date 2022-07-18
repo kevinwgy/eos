@@ -72,63 +72,33 @@ int main(int argc, char* argv[])
   double rho = 0.00896;
   double p   = 1.0e5;
   double e, T;
-
-
-  fprintf(stderr,"\n\n");
-
-  double ecprime = vf0->ComputeColdSpecificEnergyDerivative(rho);
-  fprintf(stderr,"ecprime = %e.\n", ecprime);
-
-
-  T = 298;
-
-  e = vf0->ComputeColdSpecificEnergy(rho) + vf0->ComputeThermalSpecificEnergy(rho,T);
-  fprintf(stderr,"e = %e + %e = %e.\n", vf0->ComputeColdSpecificEnergy(rho), 
-                                        vf0->ComputeThermalSpecificEnergy(rho,T), e);
-  exit(-1); 
-  
-  double dFl_drho = vf0->ComputeThermalSpecificHelmholtzDerivativeRho(rho,T);
-  double Fl0 = vf0->ComputeThermalSpecificHelmholtz(rho-1.0e-6*rho, T);
-  double Fl1 = vf0->ComputeThermalSpecificHelmholtz(rho+1.0e-6*rho, T);
-  double Theta = vf0->ComputeDebyeTemperature(rho);
-  fprintf(stderr,"Debye temperature Theta = %e, Theta/T = %e.\n", Theta, Theta/T);
-  double dFl_drho_2 = vf0->ComputeDebyeTemperatureDerivative(rho)/Theta*vf0->ComputeThermalSpecificEnergy(rho,T);
-  
-  double dFl_drho_target = p/(rho*rho) - ecprime;
-
-  fprintf(stderr,"dFl_drho_target = %e, dFl_drho(%e) = %e vs. %e. fun = %e.\n", dFl_drho_target, T, dFl_drho, dFl_drho_2, dFl_drho_target-dFl_drho);
-
-
-  double p_from_T = rho*rho*vf0->ComputeThermalSpecificHelmholtzDerivativeRho(rho,T);
-  fprintf(stderr, "p_from_T = %e.\n", p_from_T);
-
 /*
-  double Li4 = MathTools::polylogarithm_function(4, exp(-Theta/T), 100, 1.0e-8);
-  double Li3 = MathTools::polylogarithm_function(3, exp(-Theta/T), 100, 1.0e-8);
-  double Li2 = MathTools::polylogarithm_function(2, exp(-Theta/T), 100, 1.0e-8);
-  double Li1 = MathTools::polylogarithm_function(1, exp(-Theta/T), 100, 1.0e-8);
-  fprintf(stderr,"Li1,2,3,4 = %e %e %e %e.\n", Li1, Li2, Li3, Li4);
-*/
   fprintf(stderr,"\n\n");
   fprintf(stderr,"Mie-Gruneisen:\n");
   e = vf[1]->GetInternalEnergyPerUnitMass(rho, p);
   fprintf(stderr,"e = %e.\n", e);
   T = vf[1]->GetTemperature(rho, e);
   fprintf(stderr,"T = %e.\n", T);
+*/
 
   fprintf(stderr,"ANEOS:\n");
   e = vf[2]->GetInternalEnergyPerUnitMass(rho, p);
   fprintf(stderr,"e = %e.\n", e);
   T = vf[2]->GetTemperature(rho, e);
   fprintf(stderr,"T = %e.\n", T);
-  
 
 
 
+  double e_hot0  = vf0->ComputeThermalSpecificEnergy(rho,T-1.0e-6*T);
+  double e_hot1  = vf0->ComputeThermalSpecificEnergy(rho,T+1.0e-6*T);
+  double cv = (e_hot1 - e_hot0)/(2.0e-6*T);
+  fprintf(stderr,"cv = %e.\n", cv);
 
 
+  fprintf(stderr,"Speed of sound = %e.\n", vf0->ComputeSoundSpeed(rho,e));
 
-
+  T = vf[2]->GetTemperature(rho, e);
+  fprintf(stderr,"T = %e.\n", T);
   //--------------------------------------------------
   //               END OF TEST SECTION
   //--------------------------------------------------
