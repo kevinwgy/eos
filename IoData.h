@@ -228,6 +228,26 @@ struct StiffenedGasModelData {
 
 //------------------------------------------------------------------------------
 
+struct NobleAbelStiffenedGasModelData {
+
+  double specificHeatRatio; //!< gamma
+  double pressureConstant; //!< p_c
+  double volumeConstant; //!< b
+  double energyConstant; //!< q
+  double entropyConstant; //!< q'
+
+  //! parameters related to temperature
+  double cv; //!< specific heat at constant volume
+
+  NobleAbelStiffenedGasModelData();
+  ~NobleAbelStiffenedGasModelData() {}
+
+  void setup(const char *, ClassAssigner * = 0);
+
+};
+
+//------------------------------------------------------------------------------
+
 struct MieGruneisenModelData {
 
   double rho0;
@@ -338,7 +358,13 @@ struct HeatDiffusionModelData {
 
 struct HyperelasticityModelData {
 
-  enum Type {NONE = 0, CONSTANT = 1} type;
+  enum Type {NONE = 0, SAINTVENANT_KIRCHHOFF = 1, MODIFIED_SAINTVENANT_KIRCHHOFF = 2,
+             NEO_HOOKEAN = 3, MOONEY_RIVLIN = 4} type;
+
+  double youngs_modulus; 
+  double poissons_ratio;
+
+  double C01; //additional parameter for Mooney-Rivlin (dW/dI2bar)
 
   HyperelasticityModelData();
   ~HyperelasticityModelData() {}
@@ -352,7 +378,8 @@ struct HyperelasticityModelData {
 struct MaterialModelData {
 
   int id;
-  enum EOS {STIFFENED_GAS = 0, MIE_GRUNEISEN = 1, JWL = 2, ANEOS_BIRCH_MURNAGHAN_DEBYE = 3} eos;
+  enum EOS {STIFFENED_GAS = 0, NOBLE_ABEL_STIFFENED_GAS = 1, MIE_GRUNEISEN = 2, 
+            JWL = 3, ANEOS_BIRCH_MURNAGHAN_DEBYE = 4} eos;
   double rhomin;
   double pmin;
   double rhomax;
@@ -361,6 +388,7 @@ struct MaterialModelData {
   double failsafe_density; //for updating phase change -- last resort
 
   StiffenedGasModelData             sgModel;
+  NobleAbelStiffenedGasModelData    nasgModel;
   MieGruneisenModelData             mgModel;
   JonesWilkinsLeeModelData          jwlModel;
   ANEOSBirchMurnaghanDebyeModelData abmdModel;
