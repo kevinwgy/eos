@@ -17,7 +17,7 @@ endif()
 ##SET(CMAKE_CXX_COMPILER mpicxx)
 
 # compiler flags (turn on most of the warnings, except unused variables and parameters
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-reorder -Wno-sign-compare -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-reorder -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
