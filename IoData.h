@@ -8,8 +8,8 @@
 
 #include <cstdio>
 #include <map>
-#include "parser/Assigner.h"
-#include "parser/Dictionary.h"
+#include <parser/Assigner.h>
+#include <parser/Dictionary.h>
 #include <Vector2D.h>
 #include <Vector3D.h>
 #include <Utils.h>
@@ -78,6 +78,9 @@ struct StateVariable {
 struct PointData {
 
   double x,y,z;
+
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
   StateVariable initialConditions;
 
   PointData();
@@ -91,6 +94,9 @@ struct PointData {
 struct PlaneData {
 
   double cen_x, cen_y, cen_z, nx, ny, nz;
+
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
   StateVariable initialConditions;
 
   PlaneData();
@@ -101,9 +107,34 @@ struct PlaneData {
 
 //------------------------------------------------------------------------------
 
+struct ParallelepipedData {
+
+  double x0, y0, z0; //!< point 1
+
+  double ax, ay, az; //!< axis 1 and its length
+  double bx, by, bz; //!< axis 2 and its length
+  double cx, cy, cz; //!< axis 3 and its length
+
+  enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
+  StateVariable initialConditions;
+
+  ParallelepipedData();
+  ~ParallelepipedData() {}
+  Assigner *getAssigner();
+
+};
+
+//------------------------------------------------------------------------------
+
 struct SphereData {
 
   double cen_x, cen_y, cen_z, radius;
+
+  enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
   StateVariable initialConditions;
 
   SphereData();
@@ -119,6 +150,9 @@ struct SpheroidData {
   double cen_x, cen_y, cen_z;
   double axis_x, axis_y, axis_z;
   double length, diameter;
+
+  enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
 
   StateVariable initialConditions;
 
@@ -136,6 +170,9 @@ struct CylinderConeData {
   double cen_x, cen_y, cen_z, nx, ny, nz, r, L;
   //! info about the cone (connected to the top of the cylinder)
   double opening_angle_degrees, cone_height;
+
+  enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
  
   StateVariable initialConditions;
 
@@ -155,6 +192,9 @@ struct CylinderSphereData {
   OnOff front_cap;
   OnOff back_cap;
 
+  enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
   StateVariable initialConditions;
 
   CylinderSphereData();
@@ -170,6 +210,8 @@ struct UserSpecifiedEnclosureData {
   const char *surface_filename; //!< surface mesh that contains one or multiple enclosures
   double surface_thickness; //!< artificial thickness of the surface
 
+  enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
   StateVariable initialConditions;
 
   UserSpecifiedEnclosureData();
@@ -182,11 +224,12 @@ struct UserSpecifiedEnclosureData {
 
 struct MultiInitialConditionsData {
 
-  ObjectMap<PointData>    pointMap;
-  ObjectMap<PlaneData>    planeMap;
-  ObjectMap<SphereData>   sphereMap;
-  ObjectMap<SpheroidData> spheroidMap;
-  ObjectMap<CylinderConeData> cylinderconeMap;
+  ObjectMap<PointData>          pointMap;
+  ObjectMap<PlaneData>          planeMap;
+  ObjectMap<SphereData>         sphereMap;
+  ObjectMap<ParallelepipedData> parallelepipedMap;
+  ObjectMap<SpheroidData>       spheroidMap;
+  ObjectMap<CylinderConeData>   cylinderconeMap;
   ObjectMap<CylinderSphereData> cylindersphereMap;
 
   ObjectMap<UserSpecifiedEnclosureData> enclosureMap;
@@ -238,6 +281,7 @@ struct StiffenedGasModelData {
 
   double specificHeatRatio;
   double pressureConstant;
+  double enthalpyConstant;
 
   //! parameters related to temperature
   //! Method 1: Assume constant cv or cp, and T as a function of only e.
@@ -304,6 +348,34 @@ struct MieGruneisenModelData {
 
   void setup(const char *, ClassAssigner * = 0);
 
+};
+
+//------------------------------------------------------------------------------
+
+struct TillotsonModelData {
+
+  double rho0; //!< density in the ambient state
+  double e0;   //!< internal energy (per unit mass) in the ambient state
+  double a, b; //!< non-D model parameters. (a+b/4: Gruneisen param in ambient state; a+b: ... at low T (e=0))
+  double A, B; //!< dim: [force]/[length]^2. (A: bulk modulus at p = 0 and e = 0)
+  double alpha, beta; //!< non-D model parameters (in the formula for "hot expanded states")
+
+  double rhoIV; //!< "incipient vaporization" density (constant model param.)
+  double eIV;   //!< "incipient vaporization" internal energy (constant model param.)
+  double eCV;   //!< "complete vaporization" internal energy (constant model param.) (eCV-eIV: latent heat per unit mass)
+
+  double cv; //!< specific heat at constant volume
+  enum YesNo {NO = 0, YES = 1} temperature_depends_on_density; //!< whether T depends on both rho and e, or just e.
+  double T0; //!< temperature at rho0 and e0.
+
+  double cp; //!< specific heat at constant pressure
+  double h0; //!< specific enthalpy corresponding to T0 (only used if T is calculated using cp)
+
+  TillotsonModelData();
+  ~TillotsonModelData() {}
+
+  void setup(const char *, ClassAssigner * = 0);
+  
 };
 
 //------------------------------------------------------------------------------
@@ -415,7 +487,7 @@ struct MaterialModelData {
 
   int id;
   enum EOS {STIFFENED_GAS = 0, NOBLE_ABEL_STIFFENED_GAS = 1, MIE_GRUNEISEN = 2, 
-            JWL = 3, ANEOS_BIRCH_MURNAGHAN_DEBYE = 4} eos;
+            TILLOTSON = 3, JWL = 4, ANEOS_BIRCH_MURNAGHAN_DEBYE = 5} eos;
   double rhomin;
   double pmin;
   double rhomax;
@@ -426,6 +498,7 @@ struct MaterialModelData {
   StiffenedGasModelData             sgModel;
   NobleAbelStiffenedGasModelData    nasgModel;
   MieGruneisenModelData             mgModel;
+  TillotsonModelData                tillotModel;
   JonesWilkinsLeeModelData          jwlModel;
   ANEOSBirchMurnaghanDebyeModelData abmdModel;
 
@@ -482,9 +555,10 @@ struct EquationsData {
 
 struct FixData {
 
-  ObjectMap<SphereData>   sphereMap;
-  ObjectMap<SpheroidData> spheroidMap;
-  ObjectMap<CylinderConeData> cylinderconeMap;
+  ObjectMap<SphereData>         sphereMap;
+  ObjectMap<ParallelepipedData> parallelepipedMap;
+  ObjectMap<SpheroidData>       spheroidMap;
+  ObjectMap<CylinderConeData>   cylinderconeMap;
   ObjectMap<CylinderSphereData> cylindersphereMap;
 
   FixData();
@@ -733,6 +807,11 @@ struct TsData {
   double timestep;
   double cfl;
   double maxTime;
+
+  //! Parameters for steady-state computations
+  double convergence_tolerance; //!< tolerance for residual.
+  enum YesNo {NO = 0, YES = 1} local_dt; //!< each control volume applies its own time step size
+
   ExplicitData expl;
 
   TsData();
@@ -944,7 +1023,9 @@ struct MaterialIonizationModel{
 
   enum Type {NONE = 0, SAHA_IDEAL = 1, SAHA_NONIDEAL = 2} type;
 
-  enum DepressionModel {NO_DEPRESSION = 0, GRIEM = 1, EBELING = 2} depression;
+  enum DepressionModel {NO_DEPRESSION = 0, GRIEM = 1, EBELING = 2, GRIEM_FLETCHER = 3} depression;
+
+  double depression_max; //!< delta_I is capped at dpression_max*I (default: 1.0)
 
   int maxIts;
   double convergence_tol;
@@ -1132,7 +1213,7 @@ struct TerminalVisualizationData {
   int frequency;
   double frequency_dt; //!< -1 by default. To activate it, set it to a positive number
   double frequency_clocktime; //!< clock time, in seconds
-  double pause; //!< pause after printing each snapshot, relevant only if filename is stdout or stderr 
+  double pause; //!< pause after printing each snapshot, relevant only if filename is stdout or stdout 
 
   TerminalVisualizationData();
   ~TerminalVisualizationData() {}
@@ -1234,6 +1315,7 @@ struct EmbeddedSurfaceData {
   enum YesNo {NO = 0, YES = 1} provided_by_another_solver;
   const char *filename; //!< file for nodal coordinates and elements
   enum ThermalCondition {Adiabatic = 0, Isothermal = 1, Source = 2} thermal;
+  double wall_temperature; //!< used only in the case of isothermal wall 
   double heat_source;
 
   const char *wetting_output_filename; //!< optional output file that shows the detected wetted side(s)
@@ -1248,6 +1330,10 @@ struct EmbeddedSurfaceData {
                             SIX_POINT = 4} quadrature;
   double gauss_points_lofting; //!< non-dimensional, relative to local element size
   double internal_pressure; //!< pressure applied on the inactive side (i.e. inside solid body)
+
+  enum TwoDimensionalToThreeDimensionalMapping {RADIAL_BASIS = 0, 
+                                                NEAREST_NEIGHBOR = 1} twoD_to_threeD; //!< only for 2->3D
+  
 
   //! flux calculation
   double conRec_depth; //!< depth (dimensional) where constant reconstruction is applied (default: 0)

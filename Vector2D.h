@@ -60,6 +60,10 @@ struct Vec2D {
   void print(const char *msg = "") { fprintf(stdout, "%s(%e %e)\n", msg, v[0], v[1]); }
 
   double norm() { return(sqrt(v[0]*v[0]+v[1]*v[1])); }
+
+  double norm1() { return fabs(v[0])+fabs(v[1]); }
+  double norm2() { return norm(); }
+  double norminf() { return std::max(fabs(v[0]), fabs(v[1])); }
 };
 
 //------------------------------------------------------------------------------
@@ -285,9 +289,9 @@ public:
   Vec2D x;
 public:
   PointIn2D() {}
-  PointIn2D(int i, Vec2D &xin) {id = i; x = xin;}
+  PointIn2D(int i, Vec2D xin) {id = i; x = xin;}
   double val(int i) const {return x[i];}
-  double width(int i) const {return 0.0;}
+  double width([[maybe_unused]] int i) const {return 0.0;}
   int pid() const {return id;}
 };
 

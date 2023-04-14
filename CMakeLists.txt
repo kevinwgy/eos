@@ -17,7 +17,7 @@ endif()
 ##SET(CMAKE_CXX_COMPILER mpicxx)
 
 # compiler flags (turn on most of the warnings, except unused variables and parameters
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-reorder -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-reorder")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -43,6 +43,7 @@ add_custom_target(
 add_executable(eos
 Main.cpp
 IoData.cpp
+MathTools/polynomial_equations.cpp
 Utils.cpp)
 
 # link to libraries
