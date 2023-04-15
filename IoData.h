@@ -1551,8 +1551,6 @@ public:
 
   TerminalVisualizationData terminal_visualization;
 
-  EOSTabulationData eos_tabulation;
-
 public:
 
   IoData() {}
