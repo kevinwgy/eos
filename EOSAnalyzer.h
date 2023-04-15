@@ -3,8 +3,8 @@
  * <kevin.wgy@gmail.com> <kevinw3@vt.edu>
  ************************************************************************/
 
-#ifndef _EOS_ANALYSIS_
-#define _EOS_ANALYSIS_
+#ifndef _EOS_ANALYZER_
+#define _EOS_ANALYZER_
 
 #include<VarFcnBase.h>
 #include<IoData.h>
@@ -12,11 +12,11 @@
 
 
 /************************************************************************
- * class EOSAnalysis contains tools for analyzing EOS, including creating
+ * class EOSAnalyzer contains tools for analyzing EOS, including creating
  * 1D or 2D tables.
  ***********************************************************************/
 
-class EOSAnalysis {
+class EOSAnalyzer {
 
   std::vector<VarFcnBase*>& vf;
 
@@ -24,8 +24,8 @@ class EOSAnalysis {
 
 public:
 
-  EOSAnalysis(ObjectMap<EOSTabulationData> &eos_tabulationMap_, std::vector<VarFcnBase*>& vf_);
-  ~EOSAnalysis();
+  EOSAnalyzer(ObjectMap<EOSTabulationData> &eos_tabulationMap_, std::vector<VarFcnBase*>& vf_);
+  ~EOSAnalyzer();
 
   void GenerateAllEOSTables();
 

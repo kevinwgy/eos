@@ -1,4 +1,9 @@
-#include<EOSAnalysis.h>
+/************************************************************************
+ * Copyright © 2020 The Multiphysics Modeling and Computation (M2C) Lab
+ * <kevin.wgy@gmail.com> <kevinw3@vt.edu>
+ ************************************************************************/
+
+#include<EOSAnalyzer.h>
 #include<fstream>
 #include<cstring> //strcmp
 #include<cassert>
@@ -6,20 +11,20 @@ using std::vector;
 
 //------------------------------------------------------------------------------
 
-EOSAnalysis::EOSAnalysis(ObjectMap<EOSTabulationData> &eos_tabulationMap_,
+EOSAnalyzer::EOSAnalyzer(ObjectMap<EOSTabulationData> &eos_tabulationMap_,
                          vector<VarFcnBase*>& vf_)
            : eos_tabulationMap(eos_tabulationMap_), vf(vf_) 
 { }
 
 //------------------------------------------------------------------------------
 
-EOSAnalysis::~EOSAnalysis()
+EOSAnalyzer::~EOSAnalyzer()
 { }
 
 //------------------------------------------------------------------------------
 
 void
-EOSAnalysis::GenerateAllEOSTables()
+EOSAnalyzer::GenerateAllEOSTables()
 {
   for(auto it = eos_tabulationMap.dataMap.begin(); 
            it != eos_tabulationMap.dataMap.end(); it++)
@@ -29,7 +34,7 @@ EOSAnalysis::GenerateAllEOSTables()
 //------------------------------------------------------------------------------
 
 void
-EOSAnalysis::GenerateEOSTable(int table_id, EOSTabulationData& tab)
+EOSAnalyzer::GenerateEOSTable(int table_id, EOSTabulationData& tab)
 {
 
   int id = tab.materialid;
