@@ -43,6 +43,7 @@ add_custom_target(
 add_executable(eos
 Main.cpp
 IoData.cpp
+EOSAnalysis.cpp
 MathTools/polynomial_equations.cpp
 Utils.cpp)
 

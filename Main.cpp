@@ -11,6 +11,7 @@
 #include <VarFcnJWL.h>
 #include <VarFcnANEOSEx1.h>
 #include <VarFcnDummy.h>
+#include <EOSAnalysis.h>
 
 #include <polylogarithm_function.h>
 
@@ -74,6 +75,14 @@ int main(int argc, char* argv[])
     }
   }
 
+
+  //--------------------------------------------------
+  //   Output EOS Tabulation (If Specified by User)
+  //--------------------------------------------------
+  if(iod.special_tools.type == SpecialToolsData::EOS_TABULATION) {
+    EOSAnalysis eos_analysis(iod.special_tools.eos_tabulationMap, vf);
+    eos_analysis.GenerateAllEOSTables();
+  }
 
   //--------------------------------------------------
   //                  TEST SECTION 
