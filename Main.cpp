@@ -88,7 +88,30 @@ int main(int argc, char* argv[])
   //                  TEST SECTION 
   //--------------------------------------------------
 
-
+  VarFcnBase* vf0 = vf[0];
+  double rho = 2.0e-3;
+  double p = 1.0e11;
+  fprintf(stdout,"------------------------\n");
+  fprintf(stdout,"Input: rho = %e, p = %e.\n", rho, p); 
+  fprintf(stdout,"------------------------\n");
+  double e = vf0->GetInternalEnergyPerUnitMass(rho,p);
+  fprintf(stdout,"e = %e.\n", e);
+  double p2 = vf0->GetPressure(rho,e);
+  fprintf(stdout,"p = %e. (calculated)\n", p2);
+  double e0 = vf0->GetReferenceInternalEnergyPerUnitMass();
+  fprintf(stdout,"e0 = %e.\n", e0);
+  double rho2 = vf0->GetDensity(p,e);
+  fprintf(stdout,"rho = %e. (calculated)\n", rho2);
+  double T = vf0->GetTemperature(rho,e);
+  fprintf(stdout,"T = %e.\n", T);
+  double T0 = vf0->GetReferenceTemperature();
+  fprintf(stdout,"T0 = %e.\n", T0);
+  double e2 = vf0->GetInternalEnergyPerUnitMassFromTemperature(rho,T);
+  fprintf(stdout,"e = %e. (calculated from T)\n", e2);
+  double h = e + p/rho;
+  fprintf(stdout,"h = %e.\n", h);
+  double e3 = vf0->GetInternalEnergyPerUnitMassFromEnthalpy(rho,h);
+  fprintf(stdout,"e = %e. (calculated from h)\n", e3);
 
 
   //--------------------------------------------------
