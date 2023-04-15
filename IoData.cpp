@@ -3263,8 +3263,8 @@ EOSTabulationData::EOSTabulationData()
   output = PRESSURE;
   xvar = DENSITY;
   yvar = SPECIFIC_INTERNAL_ENERGY;
-  x0 = xmax = y0 = ymax = DBL_MAX;
-  Nx = Ny = -1;
+  x0 = xmax = y0 = ymax = 1.0;
+  Nx = Ny = 100;
 }
 
 //------------------------------------------------------------------------------

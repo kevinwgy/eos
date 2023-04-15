@@ -31,7 +31,7 @@ public:
 
 private:
 
-  void GenerateEOSTable(EOSTabulationData& tab);
+  void GenerateEOSTable(int table_id, EOSTabulationData& tab);
 
 };
 
