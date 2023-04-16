@@ -89,19 +89,23 @@ int main(int argc, char* argv[])
   //--------------------------------------------------
 
   VarFcnBase* vf0 = vf[0];
-  double rho = 2.0e-3;
-  double p = 1.0e11;
+  double rho = 0.978e-3;
+  double e = 1e18;
   fprintf(stdout,"------------------------\n");
-  fprintf(stdout,"Input: rho = %e, p = %e.\n", rho, p); 
+  fprintf(stdout,"Input: rho = %e, e = %e.\n", rho, e); 
   fprintf(stdout,"------------------------\n");
-  double e = vf0->GetInternalEnergyPerUnitMass(rho,p);
-  fprintf(stdout,"e = %e.\n", e);
-  double p2 = vf0->GetPressure(rho,e);
-  fprintf(stdout,"p = %e. (calculated)\n", p2);
+  double p = vf0->GetPressure(rho,e);
+  fprintf(stdout,"p = %e. (calculated)\n", p);
+  double e1 = vf0->GetInternalEnergyPerUnitMass(rho,p);
+  fprintf(stdout,"e = %e. (calculated)\n", e1);
   double e0 = vf0->GetReferenceInternalEnergyPerUnitMass();
   fprintf(stdout,"e0 = %e.\n", e0);
   double rho2 = vf0->GetDensity(p,e);
   fprintf(stdout,"rho = %e. (calculated)\n", rho2);
+  double dpdrho = vf0->GetDpdrho(rho,e);
+  fprintf(stdout,"dpdrho = %e.\n", dpdrho);
+  double Gamma = vf0->GetBigGamma(rho,e);
+  fprintf(stdout,"Gamma = %e.\n", Gamma);
   double T = vf0->GetTemperature(rho,e);
   fprintf(stdout,"T = %e.\n", T);
   double T0 = vf0->GetReferenceTemperature();

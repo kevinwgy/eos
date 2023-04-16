@@ -105,7 +105,7 @@ private:
               rho);
       exit(-1);
     }
-    if(verbose>=1 && e<0.0) {
+    if(e<0.0 && verbose>=1) {
       fprintf(stdout,"\033[0;35mWarning: In VarFcnTillot::GetCaseWithRhoE detected negative e (%e).\033[0m\n", e);
     }
     if(rho>=rho0) return 0; // Case 1 
@@ -146,7 +146,7 @@ private:
     double mu    = rho/rho0 - 1.0;
     double omega = rho0/rho - 1.0;
     double rho_e = rho*e;
-    return a*rho_e + (b*rho_e*GetChiWithOmega(omega,e) + A*mu*exp(-beta*mu))*exp(-alpha*omega*omega);
+    return a*rho_e + (b*rho_e*GetChiWithOmega(omega,e) + A*mu*exp(-beta*omega))*exp(-alpha*omega*omega);
   }
  
   double GetGamma2(double rho, double e) {
