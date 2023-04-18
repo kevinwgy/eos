@@ -8,6 +8,7 @@
 
 #include <VarFcnBase.h>
 #include <polynomial_equations.h>
+#include <ordinary_differential_equations.h>
 #include <boost/math/tools/roots.hpp>
 
 /********************************************************************************

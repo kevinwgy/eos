@@ -15,6 +15,9 @@
 
 #include <polylogarithm_function.h>
 
+//TODO
+#include<ordinary_differential_equations.h>
+
 using std::cout;
 using std::endl;
 
@@ -117,7 +120,23 @@ int main(int argc, char* argv[])
   double e3 = vf0->GetInternalEnergyPerUnitMassFromEnthalpy(rho,h);
   fprintf(stdout,"e = %e. (calculated from h)\n", e3);
 
+/*
+  auto fun = [&]([[maybe_unused]] double *U, [[maybe_unused]] double t, double *dUdt) {
+    dUdt[0] = U[0];  
+    dUdt[1] = exp(t);
+    return;
+  };
 
+  double U0[2] = {1.0, 1.0}, U[2], last_dt(1.0);
+  std::vector<double> Uall;
+  std::vector<double> tall;
+  //MathTools::runge_kutta_4(fun, 1, 0.0, &U0, 0.1, 1.01, &U, &Uall, &last_dt);
+  MathTools::runge_kutta_45(fun, 2, 0.0, U0, 0.1, 1.0, U, 1e-9, (int)1e7, &tall, &Uall);
+
+  fprintf(stderr, "Sol = %e %e.\n", U[0], U[1]);
+  for(int i=0; i<(int)tall.size(); i++)
+    fprintf(stderr,"tall[%d] = %e, Uall = %e %e.\n", i, tall[i], Uall[2*i], Uall[2*i+1]);
+*/
   //--------------------------------------------------
   //               END OF TEST SECTION
   //--------------------------------------------------
