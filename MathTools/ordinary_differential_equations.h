@@ -10,16 +10,28 @@
 
 namespace MathTools {
 
-//------------------------------------------------------------------------
+/****************************************************************************
+ * Solve first-order ODEs of the form dU/dt = F(U,t) using Runge-Kutta methods.
+ * The solvers implemented here allow the user to pass in a "state checker" 
+ * that checks whether the intermediate states are "meaningful" for the user's 
+ * application (e.g., density cannot be negative). This checker can even make 
+ * changes to the intermediate states.
+ ***************************************************************************/
 
 /****************************************************************************
  * Solve first-order ODEs of the form dU/dt = F(U,t) using 4-th order Runge-Kutta
  *
  * Reference: This is the most common 4-th order Runge-Kutta method.
  *
- * Note: "fun" must be of type "void fun(double*, double, double*)." It should implement
- *       F(U,t), with the first and second input argments being "U" (pointer) and "t". 
- *       The third input argment is supposed to be the pointer to the output "F(U,t)"
+ * Note: 
+ *   - "fun" must be of type "void fun(double*, double, double*)." It should implement
+ *     F(U,t), with the first and second input argments being "U" (pointer) and "t". 
+ *     The third input argment is supposed to be the pointer to the output "F(U,t)"
+ *   - "check_state" must be of type "bool check_state(double*)." It should take the pointer
+ *     to the state variable (U), and return true or false. True means the state variable
+ *     FAILED THE CHECK. False means it has passed the check. If needed, this function can 
+ *     also change U, since a pointer is passed to it.
+ *
  * size  : size of U
  * t0, U0: Initial condition, i.e. U(t0) = U0
  * dt    : step size
@@ -31,11 +43,12 @@ namespace MathTools {
  * Returns 0 if successful; -1 if there is input error; 1 if the solution process produced error
  ***************************************************************************/
 
-template<typename Functor>
-bool runge_kutta_4(Functor fun, int size, double t0, double* U0, double dt, double tf,
-                   double* U, //U: computed solution at tf
-                   std::vector<double>* Uall = NULL, // U at all time steps (optional output)
-                   double* last_dt = NULL) // last time step (may not be dt!)
+template<typename Functor1, typename Functor2>
+int runge_kutta_4(Functor1 fun, int size, double t0, double* U0, double dt, double tf,
+                  double* U, //U: computed solution at tf
+                  Functor2 check_state, //state checker (If not needed, set it to "[](double*){return false;}"
+                  std::vector<double>* Uall = NULL, // U at all time steps (optional output)
+                  double* last_dt = NULL) // last time step (may not be dt!)
 {
   if(tf==t0) { //trivial
     for(int j=0; j<size; j++)
@@ -67,6 +80,7 @@ bool runge_kutta_4(Functor fun, int size, double t0, double* U0, double dt, doub
     if(!std::isfinite(U[j])) return -1;
     if(Uall) Uall->push_back(U[j]);
   }
+  if(check_state(U)) return -1;
 
 
   double* Utmp = new double[size];
@@ -89,33 +103,48 @@ bool runge_kutta_4(Functor fun, int size, double t0, double* U0, double dt, doub
       //2. Calculate k2
       for(int j=0; j<size; j++) {
         Utmp[j] = U[j] + half_dt*k1[j];
-        if(!std::isfinite(Utmp[j])) {
-          delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] Utmp; return 1;}
+        if(!std::isfinite(Utmp[j]))
+          goto END_OF_LOOP_RK4;
       }
+      if(check_state(Utmp)) 
+        goto END_OF_LOOP_RK4;
+
       fun(Utmp, t+half_dt, k2);
+
 
       //3. Calculate k3
       for(int j=0; j<size; j++) {
         Utmp[j] = U[j] + half_dt*k2[j]; 
-        if(!std::isfinite(Utmp[j])) {
-          delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] Utmp; return 1;}
+        if(!std::isfinite(Utmp[j]))
+          goto END_OF_LOOP_RK4;
       }
+      if(check_state(Utmp)) 
+        goto END_OF_LOOP_RK4;
+
       fun(Utmp, t+half_dt, k3);
+
 
       //4. Calculate k4
       for(int j=0; j<size; j++) {
         Utmp[j] = U[j] + dt*k3[j]; 
-        if(!std::isfinite(Utmp[j])) {
-          delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] Utmp; return 1;}
+        if(!std::isfinite(Utmp[j]))
+          goto END_OF_LOOP_RK4;
       }
+      if(check_state(Utmp)) 
+        goto END_OF_LOOP_RK4;
+
       fun(Utmp, t+dt, k4);
+
 
       for(int j=0; j<size; j++) {
         U[j] += dt*(one_sixth*(k1[j]+k4[j]) + one_third*(k2[j]+k3[j]));
-        if(!std::isfinite(U[j])) {
-          delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] Utmp; return 1;}
+        if(!std::isfinite(U[j]))
+          goto END_OF_LOOP_RK4;
         if(Uall) Uall->push_back(U[j]);
       }
+      if(check_state(U)) 
+        goto END_OF_LOOP_RK4;
+
       t += dt;
     }
 
@@ -129,8 +158,12 @@ bool runge_kutta_4(Functor fun, int size, double t0, double* U0, double dt, doub
     }
   }
 
+END_OF_LOOP_RK4:
 
   delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] Utmp;
+
+  if(!finished) //either got infinite number or failed "check_state"
+    return 1;
 
   return 0;  
 }
@@ -141,9 +174,15 @@ bool runge_kutta_4(Functor fun, int size, double t0, double* U0, double dt, doub
  * Solve first-order ODEs of the form dU/dt = F(U,t) using the adative 4-th / 5-th
  * order Runge-Kutta-Fehlberg method, with coefficients given by Cash and Karp, 1990
  *
- * Note: "fun" must be of type "void fun(double*, double, double*)." It should implement
- *       F(U,t), with the first and second input argments being "U" (Pointer) and "t". 
- *       The third input argment is supposed to be the pointer to the output "F(U,t)"
+ * Note: 
+ *   - "fun" must be of type "void fun(double*, double, double*)." It should implement
+ *     F(U,t), with the first and second input argments being "U" (Pointer) and "t". 
+ *     The third input argment is supposed to be the pointer to the output "F(U,t)"
+ *   - "check_state" must be of type "bool check_state(double*)." It should take the pointer
+ *     to the state variable (U), and return true or false. True means the state variable
+ *     FAILED THE CHECK. False means it has passed the check. If needed, this function can 
+ *     also change U, since a pointer is passed to it.
+ *
  * size  : size of U
  * t0, U0: Initial condition, i.e. U(t0) = U0
  * dt0   : INITIAL step size
@@ -157,13 +196,15 @@ bool runge_kutta_4(Functor fun, int size, double t0, double* U0, double dt, doub
  ***************************************************************************/
 
 
-template<typename Functor>
-bool runge_kutta_45(Functor fun, int size, double t0, double* U0, double dt0, double tf,
+template<typename Functor1, typename Functor2>
+int runge_kutta_45(Functor1 fun, int size, double t0, double* U0, double dt0, double tf,
                    double* U, //U: computed solution at tf
+                   Functor2 check_state, //state checker (If not needed, set it to "[](double*){return false;}"
                    double tol = 1.0e-8, int Nmax = 1e7, //Max. number of time steps
                    std::vector<double>* tall = NULL, // t at all time steps (optional output)
                    std::vector<double>* Uall = NULL) // U at all time steps (optional output)
 {
+
   if(tf==t0) { //trivial
     for(int j=0; j<size; j++) 
       U[j] = U0[j];
@@ -200,6 +241,7 @@ bool runge_kutta_45(Functor fun, int size, double t0, double* U0, double dt0, do
   double o5_1 = 37.0/378.0, o5_3 = 250.0/621.0, o5_4 = 125.0/594.0, o5_6 = 512.0/1771.0;
 
 
+  // Set initial time and solution
   double t = t0;
   for(int j=0; j<size; j++) {
     U[j] = U0[j];
@@ -210,6 +252,7 @@ bool runge_kutta_45(Functor fun, int size, double t0, double* U0, double dt0, do
     for(int j=0; j<size; j++)
       if(Uall) Uall->push_back(U[j]);
   }
+  if(check_state(U)) return -1;
 
 
   double* Utmp = new double[size];
@@ -221,71 +264,90 @@ bool runge_kutta_45(Functor fun, int size, double t0, double* U0, double dt0, do
   double* k5 = new double[size];
   double* k6 = new double[size];
 
-
   double dt = dt0; //initial step size
   if(t+dt>tf) dt = tf-t;
   double safety = 0.9, alpha_1 = -0.2, alpha_2 = -0.25, err0 = 1.0e-30; //params in adaptation
   double max_increase = 10.0, max_decrease = 0.2;
   double ratio, rel_error;
 
-  for(int i=0; i<Nmax; i++) {
+  int i;
+  for(i=0; i<Nmax; i++) {
 
     //1. Calculate k1
     fun(U, t, k1); 
     
+
     //2. Calculate k2
     for(int j=0; j<size; j++) {
       Utmp[j] = U[j] + dt*p2_1*k1[j];
-      if(!std::isfinite(Utmp[j])) {
-        delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
-        delete[] Utmp; delete[] Utmp2; return 1;}
+      if(!std::isfinite(Utmp[j]))
+        goto END_OF_LOOP_RKF45;
     }
+    if(check_state(Utmp))
+      goto END_OF_LOOP_RKF45;
+
     fun(Utmp, t+c2*dt, k2);
+
 
     //3. Calculate k3
     for(int j=0; j<size; j++) {
       Utmp[j] = U[j] + dt*(p3_1*k1[j] + p3_2*k2[j]);
-      if(!std::isfinite(Utmp[j])) {
-        delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
-        delete[] Utmp; delete[] Utmp2; return 1;}
+      if(!std::isfinite(Utmp[j]))
+        goto END_OF_LOOP_RKF45;
     }
+    if(check_state(Utmp))
+      goto END_OF_LOOP_RKF45;
+
     fun(Utmp, t+c3*dt, k3);
+
 
     //4. Calculate k4
     for(int j=0; j<size; j++) {
       Utmp[j] = U[j] + dt*(p4_1*k1[j] + p4_2*k2[j] + p4_3*k3[j]);
-      if(!std::isfinite(Utmp[j])) {
-        delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
-        delete[] Utmp; delete[] Utmp2; return 1;}
+      if(!std::isfinite(Utmp[j]))
+        goto END_OF_LOOP_RKF45;
     }
+    if(check_state(Utmp))
+      goto END_OF_LOOP_RKF45;
+
     fun(Utmp, t+c4*dt, k4);
+
 
     //5. Calculate k5
     for(int j=0; j<size; j++) {
       Utmp[j] = U[j] + dt*(p5_1*k1[j] + p5_2*k2[j] + p5_3*k3[j] + p5_4*k4[j]);
-      if(!std::isfinite(Utmp[j])) {
-        delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
-        delete[] Utmp; delete[] Utmp2; return 1;}
+      if(!std::isfinite(Utmp[j]))
+        goto END_OF_LOOP_RKF45;
     }
+    if(check_state(Utmp))
+      goto END_OF_LOOP_RKF45;
+
     fun(Utmp, t+c5*dt, k5);
+
 
     //6. Calculate k6
     for(int j=0; j<size; j++) {
       Utmp[j] = U[j] + dt*(p6_1*k1[j] + p6_2*k2[j] + p6_3*k3[j] + p6_4*k4[j] + p6_5*k5[j]);
-      if(!std::isfinite(Utmp[j])) {
-        delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
-        delete[] Utmp; delete[] Utmp2; return 1;}
+      if(!std::isfinite(Utmp[j]))
+        goto END_OF_LOOP_RKF45;
     }
+    if(check_state(Utmp))
+      goto END_OF_LOOP_RKF45;
+
     fun(Utmp, t+c6*dt, k6);
+
+    //fprintf(stderr,"%e : %e %e %e %e %e %e\n", t, k1[0], k2[0], k3[0], k4[0], k5[0], k6[0]);
 
     //4th and 5th order approximations
     for(int j=0; j<size; j++) {
       Utmp[j]  = U[j] + dt*(o4_1*k1[j] + o4_3*k3[j] + o4_4*k4[j] + o4_5*k5[j] + o4_6*k6[j]); //4th order
       Utmp2[j] = U[j] + dt*(o5_1*k1[j] + o5_3*k3[j] + o5_4*k4[j] + o5_6*k6[j]); //5th order
-      if(!std::isfinite(Utmp[j]) || !std::isfinite(Utmp2[j])) {
-        delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
-        delete[] Utmp; delete[] Utmp2; return 1;}
+      if(!std::isfinite(Utmp[j]) || !std::isfinite(Utmp2[j]))
+        goto END_OF_LOOP_RKF45;
     }
+    if(check_state(Utmp) || check_state(Utmp2))
+      goto END_OF_LOOP_RKF45;
+
 
     //Check relative error to determine (1) whether we should repeat the step and (2) the new dt
     ratio = max_increase;
@@ -333,11 +395,18 @@ bool runge_kutta_45(Functor fun, int size, double t0, double* U0, double dt0, do
   }
 
 
+END_OF_LOOP_RKF45 :
+
   delete[] k1; delete[] k2; delete[] k3; delete[] k4; delete[] k5; delete[] k6; 
   delete[] Utmp; delete[] Utmp2;
 
-  return 2; //arriving here means it has exhaused Nmax iterations w/o reaching tf.
+  if(i>=Nmax)
+    return 2; //it has exhaused Nmax iterations w/o reaching tf.
+
+  return 1; //it must have failed an infinite check or a user-specified state check.
+
 }
+
 //------------------------------------------------------------------------
 
 

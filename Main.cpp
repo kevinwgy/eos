@@ -13,10 +13,8 @@
 #include <VarFcnDummy.h>
 #include <EOSAnalyzer.h>
 
-#include <polylogarithm_function.h>
-
-//TODO
-#include<ordinary_differential_equations.h>
+//#include <polylogarithm_function.h>
+//#include<ordinary_differential_equations.h>
 
 using std::cout;
 using std::endl;
@@ -92,8 +90,8 @@ int main(int argc, char* argv[])
   //--------------------------------------------------
 
   VarFcnBase* vf0 = vf[0];
-  double rho = 0.978e-3;
-  double e = 1e18;
+  double rho = 0.998e-3;
+  double e = 0.0; //7.0e12;
   fprintf(stdout,"------------------------\n");
   fprintf(stdout,"Input: rho = %e, e = %e.\n", rho, e); 
   fprintf(stdout,"------------------------\n");
@@ -121,22 +119,36 @@ int main(int argc, char* argv[])
   fprintf(stdout,"e = %e. (calculated from h)\n", e3);
 
 /*
+
   auto fun = [&]([[maybe_unused]] double *U, [[maybe_unused]] double t, double *dUdt) {
     dUdt[0] = U[0];  
     dUdt[1] = exp(t);
     return;
   };
 
-  double U0[2] = {1.0, 1.0}, U[2], last_dt(1.0);
+  auto state_checker = [&]([[maybe_unused]] double *U) {
+    return false;
+  };
+
+  lalala test;
+
+  double U0[2] = {1.0, 1.0}, U[2], last_dt(1000.0);
   std::vector<double> Uall;
   std::vector<double> tall;
-  //MathTools::runge_kutta_4(fun, 1, 0.0, &U0, 0.1, 1.01, &U, &Uall, &last_dt);
-  MathTools::runge_kutta_45(fun, 2, 0.0, U0, 0.1, 1.0, U, 1e-9, (int)1e7, &tall, &Uall);
+  //MathTools::runge_kutta_4(fun, 2, 0.0, U0, 0.1, 1.0, U, state_checker, &Uall, &last_dt);
+  MathTools::runge_kutta_45(fun, 2, 0.0, U0, 0.1, 1.0, U, 
+                            state_checker,
+                            1e-9, (int)1e7, 
+                            &tall, &Uall);
 
-  fprintf(stderr, "Sol = %e %e.\n", U[0], U[1]);
+  fprintf(stderr, "Sol = %e %e. last_dt = %e.\n", U[0], U[1], last_dt);
+  //for(int i=0; i<(int)(Uall.size()/2); i++)
+  //  fprintf(stderr,"Uall[%d] = %e %e.\n", i, Uall[2*i], Uall[2*i+1]);
   for(int i=0; i<(int)tall.size(); i++)
     fprintf(stderr,"tall[%d] = %e, Uall = %e %e.\n", i, tall[i], Uall[2*i], Uall[2*i+1]);
+
 */
+
   //--------------------------------------------------
   //               END OF TEST SECTION
   //--------------------------------------------------
