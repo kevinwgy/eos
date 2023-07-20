@@ -81,6 +81,8 @@ struct PointData {
 
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
 
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
+
   StateVariable initialConditions;
 
   PointData();
@@ -96,6 +98,8 @@ struct PlaneData {
   double cen_x, cen_y, cen_z, nx, ny, nz;
 
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
 
   StateVariable initialConditions;
 
@@ -118,6 +122,8 @@ struct ParallelepipedData {
   enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
 
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
+
   StateVariable initialConditions;
 
   ParallelepipedData();
@@ -135,6 +141,8 @@ struct SphereData {
   enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
 
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
+
   StateVariable initialConditions;
 
   SphereData();
@@ -149,10 +157,13 @@ struct SpheroidData {
 
   double cen_x, cen_y, cen_z;
   double axis_x, axis_y, axis_z;
-  double length, diameter;
+  double semi_length; //!< half length (along axis)
+  double radius; //!< max. radius on the transverse plane
 
   enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
 
   StateVariable initialConditions;
 
@@ -174,6 +185,8 @@ struct CylinderConeData {
   enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
  
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
+
   StateVariable initialConditions;
 
   CylinderConeData();
@@ -195,6 +208,8 @@ struct CylinderSphereData {
   enum InteriorOrExterior {INTERIOR = 0, EXTERIOR = 1} side;
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
 
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
+
   StateVariable initialConditions;
 
   CylinderSphereData();
@@ -211,6 +226,8 @@ struct UserSpecifiedEnclosureData {
   double surface_thickness; //!< artificial thickness of the surface
 
   enum Inclusion {OVERRIDE = 0, INTERSECTION = 1, UNION = 2} inclusion;
+
+  int order; //!< set operation order (0, 1, ...). Currently NOT used in M2C (but used in A2C).
 
   StateVariable initialConditions;
 
@@ -345,6 +362,36 @@ struct MieGruneisenModelData {
 
   MieGruneisenModelData();
   ~MieGruneisenModelData() {}
+
+  void setup(const char *, ClassAssigner * = 0);
+
+};
+
+//------------------------------------------------------------------------------
+
+struct ExtendedMieGruneisenModelData {
+
+  double rho0;
+  double c0;
+  double Gamma0;
+  double s;
+  double e0;
+
+  double eta_min; //!< a negative value (tension) that triggers pR = const (rho0*c0*c0*eta_min).
+
+  //! parameters related to temperature
+
+  enum TemperatureLaw {ORIGINAL_CV = 0, SIMPLIFIED_CV = 1, SIMPLIFIED_CP = 2} Tlaw;
+  //! Note: All the three laws require T0. In addition, "0" & "1" require cv. "2" requires cp and h0.
+
+  double cv; //!< specific heat at constant volume
+  double T0;  //!< temperature is T0 when internal energy (per mass) is e0
+
+  double cp; //!< specific heat at constant pressure
+  double h0; //!< enthalpy per specific mass at T0
+
+  ExtendedMieGruneisenModelData();
+  ~ExtendedMieGruneisenModelData() {}
 
   void setup(const char *, ClassAssigner * = 0);
 
@@ -487,7 +534,8 @@ struct MaterialModelData {
 
   int id;
   enum EOS {STIFFENED_GAS = 0, NOBLE_ABEL_STIFFENED_GAS = 1, MIE_GRUNEISEN = 2, 
-            TILLOTSON = 3, JWL = 4, ANEOS_BIRCH_MURNAGHAN_DEBYE = 5} eos;
+            EXTENDED_MIE_GRUNEISEN = 3,
+            TILLOTSON = 4, JWL = 5, ANEOS_BIRCH_MURNAGHAN_DEBYE = 6} eos;
   double rhomin;
   double pmin;
   double rhomax;
@@ -498,6 +546,7 @@ struct MaterialModelData {
   StiffenedGasModelData             sgModel;
   NobleAbelStiffenedGasModelData    nasgModel;
   MieGruneisenModelData             mgModel;
+  ExtendedMieGruneisenModelData     mgextModel;
   TillotsonModelData                tillotModel;
   JonesWilkinsLeeModelData          jwlModel;
   ANEOSBirchMurnaghanDebyeModelData abmdModel;
@@ -678,10 +727,29 @@ struct LevelSetReinitializationData {
 };
 
 //------------------------------------------------------------------------------
+/** Enforces a uniform velocity field (constant value or time-history) for a certain materialid;
+  * Activated when materialid is set to a non-negative value. First, tries to read the file. If it
+  * is not specified, apply the constant velocity values (default: (0,0,0)). */
+struct PrescribedMotionData {
+
+  int materialid; //!< The material id that will have a prescribed velocity
+
+  double velocity_x, velocity_y, velocity_z;
+
+  const char *velocity_time_history;
+
+  PrescribedMotionData();
+  ~PrescribedMotionData() {}
+
+  Assigner *getAssigner();
+
+};
+
+//------------------------------------------------------------------------------
 
 struct LevelSetSchemeData {
 
-  int materialid; //! The material in the phi<0 region ("inside")
+  int materialid; //!< The material in the phi<0 region ("inside")
 
   enum Solver {FINITE_VOLUME = 0, FINITE_DIFFERENCE = 1} solver;
 
@@ -689,13 +757,13 @@ struct LevelSetSchemeData {
 
   enum Flux {ROE = 0, LOCAL_LAX_FRIEDRICHS = 1, UPWIND = 2} flux;
   ReconstructionData rec;
-  double delta; //! The coeffient in Harten's entropy fix.
+  double delta; //!< The coeffient in Harten's entropy fix.
 
   enum BcType {NONE = 0, ZERO_NEUMANN = 1, LINEAR_EXTRAPOLATION = 2, NON_NEGATIVE = 3, SIZE = 4};
   BcType bc_x0, bc_xmax, bc_y0, bc_ymax, bc_z0, bc_zmax;
   
 
-  int bandwidth; //number of layers of nodes on each side of interface
+  int bandwidth; //!< number of layers of nodes on each side of interface
 
   LevelSetReinitializationData reinit;
 
@@ -714,6 +782,8 @@ struct SchemesData {
   BoundarySchemeData bc;
 
   ObjectMap<LevelSetSchemeData> ls;
+
+  ObjectMap<PrescribedMotionData> pm;
 
   SchemesData();
   ~SchemesData() {}
@@ -1294,6 +1364,8 @@ struct LagrangianMeshOutputData {
   const char* disp; //!< displacement
   const char* sol; //!< solution
 
+  const char *wetting_output_filename; //!< optional output file that shows the detected wetted side(s)
+
   LagrangianMeshOutputData();
   ~LagrangianMeshOutputData() {}
 
@@ -1318,12 +1390,11 @@ struct EmbeddedSurfaceData {
   double wall_temperature; //!< used only in the case of isothermal wall 
   double heat_source;
 
-  const char *wetting_output_filename; //!< optional output file that shows the detected wetted side(s)
-
   double surface_thickness;
 
   //! tools
   const char *dynamics_calculator;
+  const char *force_calculator;
 
   //! force calculation (NONE: force is 0, i.e. one-way coupling)
   enum GaussQuadratureRule {NONE = 0, ONE_POINT = 1, THREE_POINT = 2, FOUR_POINT = 3,

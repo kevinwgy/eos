@@ -68,6 +68,8 @@ PointData::PointData()
   z  = 0.0;
 
   inclusion = OVERRIDE;
+
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -75,7 +77,7 @@ PointData::PointData()
 Assigner *PointData::getAssigner()
 {
 
-  ClassAssigner *ca = new ClassAssigner("normal", 5, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 6, nullAssigner);
 
   new ClassDouble<PointData>
     (ca, "X", this, &PointData::x);
@@ -89,6 +91,8 @@ Assigner *PointData::getAssigner()
   new ClassToken<PointData> (ca, "Inclusion", this,
      reinterpret_cast<int PointData::*>(&PointData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
+
+  new ClassInt<PointData>(ca, "OperationOrder", this, &PointData::order);
 
   return ca;
 }
@@ -108,6 +112,7 @@ PlaneData::PlaneData()
 
   inclusion = OVERRIDE;
 
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -115,7 +120,7 @@ PlaneData::PlaneData()
 Assigner *PlaneData::getAssigner()
 {
 
-  ClassAssigner *ca = new ClassAssigner("normal", 8, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 9, nullAssigner);
 
   new ClassDouble<PlaneData> (ca, "Point_x", this, &PlaneData::cen_x);
   new ClassDouble<PlaneData> (ca, "Point_y", this, &PlaneData::cen_y);
@@ -129,6 +134,8 @@ Assigner *PlaneData::getAssigner()
   new ClassToken<PlaneData> (ca, "Inclusion", this,
      reinterpret_cast<int PlaneData::*>(&PlaneData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
+
+  new ClassInt<PlaneData>(ca, "OperationOrder", this, &PlaneData::order);
 
   return ca;
 }
@@ -145,6 +152,8 @@ SphereData::SphereData()
 
   side = INTERIOR;
   inclusion = OVERRIDE;
+
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -152,7 +161,7 @@ SphereData::SphereData()
 Assigner *SphereData::getAssigner()
 {
   
-  ClassAssigner *ca = new ClassAssigner("normal", 7, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 8, nullAssigner);
   
   new ClassDouble<SphereData> (ca, "Center_x", this, &SphereData::cen_x);
   new ClassDouble<SphereData> (ca, "Center_y", this, &SphereData::cen_y);
@@ -166,6 +175,8 @@ Assigner *SphereData::getAssigner()
   new ClassToken<SphereData> (ca, "Inclusion", this,
      reinterpret_cast<int SphereData::*>(&SphereData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
+
+  new ClassInt<SphereData>(ca, "OperationOrder", this, &SphereData::order);
 
   initialConditions.setup("InitialState", ca);
   
@@ -185,6 +196,7 @@ ParallelepipedData::ParallelepipedData()
   side = INTERIOR;
   inclusion = OVERRIDE;
 
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -192,11 +204,11 @@ ParallelepipedData::ParallelepipedData()
 Assigner *ParallelepipedData::getAssigner()
 {
 
-  ClassAssigner *ca = new ClassAssigner("normal", 15, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 16, nullAssigner);
 
-  new ClassDouble<ParallelepipedData> (ca, "X0", this, &ParallelepipedData::x0);
-  new ClassDouble<ParallelepipedData> (ca, "Y0", this, &ParallelepipedData::y0);
-  new ClassDouble<ParallelepipedData> (ca, "Z0", this, &ParallelepipedData::z0);
+  new ClassDouble<ParallelepipedData> (ca, "Px", this, &ParallelepipedData::x0);
+  new ClassDouble<ParallelepipedData> (ca, "Py", this, &ParallelepipedData::y0);
+  new ClassDouble<ParallelepipedData> (ca, "Pz", this, &ParallelepipedData::z0);
 
   new ClassDouble<ParallelepipedData> (ca, "Ax", this, &ParallelepipedData::ax);
   new ClassDouble<ParallelepipedData> (ca, "Ay", this, &ParallelepipedData::ay);
@@ -218,6 +230,8 @@ Assigner *ParallelepipedData::getAssigner()
      reinterpret_cast<int ParallelepipedData::*>(&ParallelepipedData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
 
+  new ClassInt<ParallelepipedData>(ca, "OperationOrder", this, &ParallelepipedData::order);
+
   initialConditions.setup("InitialState", ca);
 
   return ca;
@@ -236,11 +250,13 @@ SpheroidData::SpheroidData()
   axis_y = 0.0;
   axis_z = 0.0;
 
-  length = 0.0;
-  diameter = 0.0;
+  semi_length = 0.0;
+  radius = 0.0;
 
   side = INTERIOR;
   inclusion = OVERRIDE;
+
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -248,7 +264,7 @@ SpheroidData::SpheroidData()
 Assigner *SpheroidData::getAssigner()
 {
 
-  ClassAssigner *ca = new ClassAssigner("normal", 11, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 12, nullAssigner);
 
   new ClassDouble<SpheroidData> (ca, "Center_x", this, &SpheroidData::cen_x);
   new ClassDouble<SpheroidData> (ca, "Center_y", this, &SpheroidData::cen_y);
@@ -256,8 +272,8 @@ Assigner *SpheroidData::getAssigner()
   new ClassDouble<SpheroidData> (ca, "Axis_x", this, &SpheroidData::axis_x);
   new ClassDouble<SpheroidData> (ca, "Axis_y", this, &SpheroidData::axis_y);
   new ClassDouble<SpheroidData> (ca, "Axis_z", this, &SpheroidData::axis_z);
-  new ClassDouble<SpheroidData> (ca, "Length", this, &SpheroidData::length);
-  new ClassDouble<SpheroidData> (ca, "Diameter", this, &SpheroidData::diameter);
+  new ClassDouble<SpheroidData> (ca, "SemiLength", this, &SpheroidData::semi_length);
+  new ClassDouble<SpheroidData> (ca, "Radius", this, &SpheroidData::radius);
 
   new ClassToken<SpheroidData> (ca, "Side", this,
      reinterpret_cast<int SpheroidData::*>(&SpheroidData::side), 2,
@@ -266,6 +282,8 @@ Assigner *SpheroidData::getAssigner()
   new ClassToken<SpheroidData> (ca, "Inclusion", this,
      reinterpret_cast<int SpheroidData::*>(&SpheroidData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
+
+  new ClassInt<SpheroidData>(ca, "OperationOrder", this, &SpheroidData::order);
 
   initialConditions.setup("InitialState", ca);
 
@@ -291,13 +309,15 @@ CylinderConeData::CylinderConeData() {
 
   side = INTERIOR;
   inclusion = OVERRIDE;
+
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
 
 Assigner *CylinderConeData::getAssigner()
 {
-  ClassAssigner *ca = new ClassAssigner("normal", 13, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 14, nullAssigner);
 
   new ClassDouble<CylinderConeData> (ca, "Axis_x", this, &CylinderConeData::nx);
   new ClassDouble<CylinderConeData> (ca, "Axis_y", this, &CylinderConeData::ny);
@@ -318,6 +338,8 @@ Assigner *CylinderConeData::getAssigner()
   new ClassToken<CylinderConeData> (ca, "Inclusion", this,
      reinterpret_cast<int CylinderConeData::*>(&CylinderConeData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
+
+  new ClassInt<CylinderConeData>(ca, "OperationOrder", this, &CylinderConeData::order);
 
   initialConditions.setup("InitialState", ca);
 
@@ -343,20 +365,22 @@ CylinderSphereData::CylinderSphereData() {
 
   side = INTERIOR;
   inclusion = OVERRIDE;
+
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
 
 Assigner *CylinderSphereData::getAssigner()
 {
-  ClassAssigner *ca = new ClassAssigner("normal", 13, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 14, nullAssigner);
 
   new ClassDouble<CylinderSphereData> (ca, "Axis_x", this, &CylinderSphereData::nx);
   new ClassDouble<CylinderSphereData> (ca, "Axis_y", this, &CylinderSphereData::ny);
   new ClassDouble<CylinderSphereData> (ca, "Axis_z", this, &CylinderSphereData::nz);
-  new ClassDouble<CylinderSphereData> (ca, "CylinderCenter_x", this, &CylinderSphereData::cen_x);
-  new ClassDouble<CylinderSphereData> (ca, "CylinderCenter_y", this, &CylinderSphereData::cen_y);
-  new ClassDouble<CylinderSphereData> (ca, "CylinderCenter_z", this, &CylinderSphereData::cen_z);
+  new ClassDouble<CylinderSphereData> (ca, "BaseCenter_x", this, &CylinderSphereData::cen_x);
+  new ClassDouble<CylinderSphereData> (ca, "BaseCenter_y", this, &CylinderSphereData::cen_y);
+  new ClassDouble<CylinderSphereData> (ca, "BaseCenter_z", this, &CylinderSphereData::cen_z);
   new ClassDouble<CylinderSphereData> (ca, "CylinderRadius", this, &CylinderSphereData::r);
   new ClassDouble<CylinderSphereData> (ca, "CylinderHeight", this, &CylinderSphereData::L);
   new ClassToken<CylinderSphereData> (ca, "FrontSphericalCap", this,
@@ -374,6 +398,8 @@ Assigner *CylinderSphereData::getAssigner()
      reinterpret_cast<int CylinderSphereData::*>(&CylinderSphereData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
 
+  new ClassInt<CylinderSphereData>(ca, "OperationOrder", this, &CylinderSphereData::order);
+
   initialConditions.setup("InitialState", ca);
 
   return ca;
@@ -387,13 +413,15 @@ UserSpecifiedEnclosureData::UserSpecifiedEnclosureData()
   surface_thickness = 1.0e-8;
 
   inclusion = OVERRIDE;
+
+  order = 0;
 }
 
 //------------------------------------------------------------------------------
 
 Assigner *UserSpecifiedEnclosureData::getAssigner()
 {
-  ClassAssigner *ca = new ClassAssigner("normal", 3, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 4, nullAssigner);
 
   new ClassStr<UserSpecifiedEnclosureData>(ca, "SurfaceMeshFile", this,
           &UserSpecifiedEnclosureData::surface_filename);
@@ -406,6 +434,8 @@ Assigner *UserSpecifiedEnclosureData::getAssigner()
   new ClassToken<UserSpecifiedEnclosureData> (ca, "Inclusion", this,
      reinterpret_cast<int UserSpecifiedEnclosureData::*>(&UserSpecifiedEnclosureData::inclusion), 3,
      "Override", 0, "Intersection", 1, "Union", 2);
+
+  new ClassInt<UserSpecifiedEnclosureData>(ca, "OperationOrder", this, &UserSpecifiedEnclosureData::order);
 
   return ca;
 }
@@ -685,7 +715,59 @@ void NobleAbelStiffenedGasModelData::setup(const char *name, ClassAssigner *fath
 
 //------------------------------------------------------------------------------
 
-MieGruneisenModelData::MieGruneisenModelData() 
+MieGruneisenModelData::MieGruneisenModelData()
+{
+  // default values are for copper
+  // These values are taken from Wikipedia
+  // (https://en.wikipedia.org/wiki/Mie%E2%80%93Gr%C3%BCneisen_equation_of_state),
+  // which cites two papers: Mitchell and Nellis (1981) "Shock compression of
+  // aluminum, copper, and tantalum", Journal of Applied Physics, and MacDonald and
+  // MacDonald (1981) "Thermodynamic properties of fcc metals at high temperaures",
+  // Physical Review B.
+
+  rho0 = 8.96e-3;       // unit: g/mm3
+  c0 = 3.933e6;         // unit: mm/s
+  Gamma0 = 1.99;        // non-dimensional
+  s = 1.5;              // non-dimensional
+  e0 = 0.0;
+
+  cv = 0.0; //3.90e8;   // unit: mm2/(s2.K)
+  cp = 0.0;
+  h0 = 0.0;
+  T0 = 0.0;
+}
+
+//------------------------------------------------------------------------------
+
+void MieGruneisenModelData::setup(const char *name, ClassAssigner *father)
+{
+
+  ClassAssigner *ca = new ClassAssigner(name, 9, father);
+
+  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceDensity", this,
+                                         &MieGruneisenModelData::rho0);
+  new ClassDouble<MieGruneisenModelData>(ca, "SpecificHeatAtConstantVolume", this,
+                                         &MieGruneisenModelData::cv);
+  new ClassDouble<MieGruneisenModelData>(ca, "BulkSpeedOfSound", this,
+                                         &MieGruneisenModelData::c0);
+  new ClassDouble<MieGruneisenModelData>(ca, "HugoniotSlope", this,
+                                         &MieGruneisenModelData::s);
+  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceGamma", this,
+                                         &MieGruneisenModelData::Gamma0);
+  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceSpecificInternalEnergy", this,
+                                         &MieGruneisenModelData::e0);
+  new ClassDouble<MieGruneisenModelData>(ca, "SpecificHeatAtConstantPressure", this,
+                                         &MieGruneisenModelData::cp);
+  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceSpecificEnthalpy", this,
+                                         &MieGruneisenModelData::h0);
+  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceTemperature", this,
+                                         &MieGruneisenModelData::T0);
+
+}
+
+//------------------------------------------------------------------------------
+
+ExtendedMieGruneisenModelData::ExtendedMieGruneisenModelData() 
 {
   // default values are for copper
   // These values are taken from Wikipedia 
@@ -701,6 +783,10 @@ MieGruneisenModelData::MieGruneisenModelData()
   s = 1.5;              // non-dimensional
   e0 = 0.0;         
 
+  eta_min = -DBL_MAX;   // non-dimensional (volumetric strain)
+
+  Tlaw = ORIGINAL_CV; 
+
   cv = 0.0; //3.90e8;   // unit: mm2/(s2.K)
   cp = 0.0;
   h0 = 0.0;
@@ -709,30 +795,38 @@ MieGruneisenModelData::MieGruneisenModelData()
 
 //------------------------------------------------------------------------------
 
-void MieGruneisenModelData::setup(const char *name, ClassAssigner *father)
+void ExtendedMieGruneisenModelData::setup(const char *name, ClassAssigner *father)
 {
 
-  ClassAssigner *ca = new ClassAssigner(name, 9, father);
+  ClassAssigner *ca = new ClassAssigner(name, 11, father);
 
-  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceDensity", this, 
-                                         &MieGruneisenModelData::rho0);
-  new ClassDouble<MieGruneisenModelData>(ca, "SpecificHeatAtConstantVolume", this, 
-                                         &MieGruneisenModelData::cv);
-  new ClassDouble<MieGruneisenModelData>(ca, "BulkSpeedOfSound", this, 
-                                         &MieGruneisenModelData::c0);
-  new ClassDouble<MieGruneisenModelData>(ca, "HugoniotSlope", this, 
-                                         &MieGruneisenModelData::s);
-  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceGamma", this, 
-                                         &MieGruneisenModelData::Gamma0);
-  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceSpecificInternalEnergy", this, 
-                                         &MieGruneisenModelData::e0);
-  new ClassDouble<MieGruneisenModelData>(ca, "SpecificHeatAtConstantPressure", this,
-                                         &MieGruneisenModelData::cp);
-  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceSpecificEnthalpy", this,
-                                         &MieGruneisenModelData::h0);
-  new ClassDouble<MieGruneisenModelData>(ca, "ReferenceTemperature", this,
-                                         &MieGruneisenModelData::T0);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "ReferenceDensity", this, 
+                                         &ExtendedMieGruneisenModelData::rho0);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "SpecificHeatAtConstantVolume", this, 
+                                         &ExtendedMieGruneisenModelData::cv);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "BulkSpeedOfSound", this, 
+                                         &ExtendedMieGruneisenModelData::c0);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "HugoniotSlope", this, 
+                                         &ExtendedMieGruneisenModelData::s);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "ReferenceGamma", this, 
+                                         &ExtendedMieGruneisenModelData::Gamma0);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "ReferenceSpecificInternalEnergy", this, 
+                                         &ExtendedMieGruneisenModelData::e0);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "SpecificHeatAtConstantPressure", this,
+                                         &ExtendedMieGruneisenModelData::cp);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "ReferenceSpecificEnthalpy", this,
+                                         &ExtendedMieGruneisenModelData::h0);
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "ReferenceTemperature", this,
+                                         &ExtendedMieGruneisenModelData::T0);
 
+  new ClassToken<ExtendedMieGruneisenModelData>(ca, "TemperatureLaw", this,
+                 reinterpret_cast<int ExtendedMieGruneisenModelData::*>
+                 (&ExtendedMieGruneisenModelData::Tlaw), 3,
+                 "OriginalCv", 0, "SimplifiedCv", 1, "SimplifiedCp", 2);
+
+  new ClassDouble<ExtendedMieGruneisenModelData>(ca, "VolumetricStrainBreak", this,
+                                         &ExtendedMieGruneisenModelData::eta_min);
+  
 }
 
 //------------------------------------------------------------------------------
@@ -938,13 +1032,14 @@ MaterialModelData::MaterialModelData()
 Assigner *MaterialModelData::getAssigner()
 {
 
-  ClassAssigner *ca = new ClassAssigner("normal", 15, nullAssigner);
+  ClassAssigner *ca = new ClassAssigner("normal", 16, nullAssigner);
 
   new ClassToken<MaterialModelData>(ca, "EquationOfState", this,
-                                 reinterpret_cast<int MaterialModelData::*>(&MaterialModelData::eos), 6,
+                                 reinterpret_cast<int MaterialModelData::*>(&MaterialModelData::eos), 7,
                                  "StiffenedGas", MaterialModelData::STIFFENED_GAS, 
                                  "NobleAbelStiffenedGas", MaterialModelData::NOBLE_ABEL_STIFFENED_GAS, 
                                  "MieGruneisen", MaterialModelData::MIE_GRUNEISEN,
+                                 "ExtendedMieGruneisen", MaterialModelData::EXTENDED_MIE_GRUNEISEN,
                                  "Tillotson", MaterialModelData::TILLOTSON,
                                  "JonesWilkinsLee", MaterialModelData::JWL,
                                  "ANEOSBirchMurnaghanDebye", MaterialModelData::ANEOS_BIRCH_MURNAGHAN_DEBYE);
@@ -958,6 +1053,7 @@ Assigner *MaterialModelData::getAssigner()
   sgModel.setup("StiffenedGasModel", ca);
   nasgModel.setup("NobleAbelStiffenedGasModel", ca);
   mgModel.setup("MieGruneisenModel", ca);
+  mgextModel.setup("ExtendedMieGruneisenModel", ca);
   tillotModel.setup("TillotsonModel", ca);
   jwlModel.setup("JonesWilkinsLeeModel", ca);
   abmdModel.setup("ANEOSBirchMurnaghanDebyeModel", ca);
@@ -1307,6 +1403,41 @@ void LevelSetReinitializationData::setup(const char *name, ClassAssigner *father
 
 //------------------------------------------------------------------------------
 
+PrescribedMotionData::PrescribedMotionData()
+{
+  materialid = -1;
+
+  velocity_x = 0.0;
+  velocity_y = 0.0;
+  velocity_z = 0.0;
+
+  velocity_time_history = "";
+}
+
+//------------------------------------------------------------------------------
+
+Assigner *PrescribedMotionData::getAssigner()
+{
+  ClassAssigner *ca = new ClassAssigner("normal", 5, nullAssigner);
+
+  new ClassInt<PrescribedMotionData>(ca, "MaterialID", this, 
+          &PrescribedMotionData::materialid);
+
+  new ClassDouble<PrescribedMotionData>(ca, "VelocityX", this, 
+          &PrescribedMotionData::velocity_x);
+  new ClassDouble<PrescribedMotionData>(ca, "VelocityY", this, 
+          &PrescribedMotionData::velocity_y);
+  new ClassDouble<PrescribedMotionData>(ca, "VelocityZ", this, 
+          &PrescribedMotionData::velocity_z);
+
+  new ClassStr<PrescribedMotionData>(ca, "VelocityTimeHistoryFile", this, 
+          &PrescribedMotionData::velocity_time_history);
+
+  return ca;
+}
+
+//------------------------------------------------------------------------------
+
 LevelSetSchemeData::LevelSetSchemeData() 
 {
   materialid = -1;
@@ -1396,13 +1527,16 @@ SchemesData::SchemesData()
 void SchemesData::setup(const char *name, ClassAssigner *father)
 {
 
-  ClassAssigner *ca = new ClassAssigner(name, 3, father);
+  ClassAssigner *ca = new ClassAssigner(name, 4, father);
 
   ns.setup("NavierStokes", ca);
 
   bc.setup("Boundaries", ca);
 
   ls.setup("LevelSet", ca);
+
+  pm.setup("PrescribedMotion", ca);
+
 }
 
 //------------------------------------------------------------------------------
@@ -2918,8 +3052,8 @@ EmbeddedSurfaceData::EmbeddedSurfaceData()
   wall_temperature = 300.0; //!< Kelvin
   heat_source = 0.0;
   dynamics_calculator = "";
+  force_calculator = "";
 
-  wetting_output_filename = "";
 
   conRec_depth = 0.0;
 }
@@ -2939,8 +3073,6 @@ Assigner *EmbeddedSurfaceData::getAssigner()
                                       &EmbeddedSurfaceData::surface_thickness);
 
   new ClassStr<EmbeddedSurfaceData>(ca, "MeshFile", this, &EmbeddedSurfaceData::filename);
-
-  new ClassStr<EmbeddedSurfaceData>(ca, "ContactSurfaceOutput", this, &EmbeddedSurfaceData::wetting_output_filename);
 
 
   new ClassToken<EmbeddedSurfaceData> (ca, "GaussQuadrature", this,
@@ -2970,6 +3102,9 @@ Assigner *EmbeddedSurfaceData::getAssigner()
 
   new ClassStr<EmbeddedSurfaceData>(ca, "UserDefinedDynamicsCalculator", this, 
                                     &EmbeddedSurfaceData::dynamics_calculator);
+
+  new ClassStr<EmbeddedSurfaceData>(ca, "UserDefinedForceCalculator", this, 
+                                    &EmbeddedSurfaceData::force_calculator);
 
   new ClassDouble<EmbeddedSurfaceData>(ca, "ConstantReconstructionDepth", 
                                        this, &EmbeddedSurfaceData::conRec_depth);
@@ -3107,13 +3242,15 @@ LagrangianMeshOutputData::LagrangianMeshOutputData()
   orig_config = "";
   disp = "";
   sol  = "";
+
+  wetting_output_filename = "";
 }
 
 //------------------------------------------------------------------------------
 
 void LagrangianMeshOutputData::setup(const char *name, ClassAssigner *father)
 {
-  ClassAssigner *ca = new ClassAssigner(name, 6, father);
+  ClassAssigner *ca = new ClassAssigner(name, 7, father);
   
   new ClassInt<LagrangianMeshOutputData>(ca, "Frequency", this, &LagrangianMeshOutputData::frequency);
   new ClassDouble<LagrangianMeshOutputData>(ca, "TimeInterval", this, &LagrangianMeshOutputData::frequency_dt);
@@ -3123,6 +3260,10 @@ void LagrangianMeshOutputData::setup(const char *name, ClassAssigner *father)
 
   new ClassStr<LagrangianMeshOutputData>(ca, "Displacement", this, &LagrangianMeshOutputData::disp);
   new ClassStr<LagrangianMeshOutputData>(ca, "Solution", this, &LagrangianMeshOutputData::sol);
+
+  new ClassStr<LagrangianMeshOutputData>(ca, "ContactSurfaceOutput", this,
+                                         &LagrangianMeshOutputData::wetting_output_filename);
+
 }
 
 //------------------------------------------------------------------------------

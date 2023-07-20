@@ -7,6 +7,7 @@
 #include <VarFcnSG.h>
 #include <VarFcnNASG.h>
 #include <VarFcnMG.h>
+#include <VarFcnMGExt.h>
 #include <VarFcnTillot.h>
 #include <VarFcnJWL.h>
 #include <VarFcnANEOSEx1.h>
@@ -61,6 +62,9 @@ int main(int argc, char* argv[])
     } else if(it->second->eos == MaterialModelData::MIE_GRUNEISEN) {
       vf[matid] = new VarFcnMG(*it->second);
       print("- Initialized vf[%d]: Mie-Gruneisen.\n", matid);
+    } else if(it->second->eos == MaterialModelData::EXTENDED_MIE_GRUNEISEN) {
+      vf[matid] = new VarFcnMGExt(*it->second);
+      print("- Initialized vf[%d]: Extended Mie-Gruneisen.\n", matid);
     } else if(it->second->eos == MaterialModelData::TILLOTSON) {
       vf[matid] = new VarFcnTillot(*it->second);
       print("- Initialized vf[%d]: Tillotson.\n", matid);
@@ -90,6 +94,17 @@ int main(int argc, char* argv[])
   //--------------------------------------------------
 
   VarFcnBase* vf0 = vf[0];
+
+  double rho = 3.365839e-4;
+  double p = -7.082216e6;
+  double e = vf0->GetInternalEnergyPerUnitMass(rho, p);
+  fprintf(stdout,"e = %e.\n", e);
+
+
+  double c2 = vf0->ComputeSoundSpeedSquare(rho, e);
+  fprintf(stdout,"c2 = %e.\n", c2);
+
+/*
   double rho = 0.998e-3;
   double e = 0.0; //7.0e12;
   fprintf(stdout,"------------------------\n");
@@ -117,6 +132,8 @@ int main(int argc, char* argv[])
   fprintf(stdout,"h = %e.\n", h);
   double e3 = vf0->GetInternalEnergyPerUnitMassFromEnthalpy(rho,h);
   fprintf(stdout,"e = %e. (calculated from h)\n", e3);
+
+*/
 
 /*
 
