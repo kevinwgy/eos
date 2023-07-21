@@ -17,6 +17,9 @@
 //#include <polylogarithm_function.h>
 //#include<ordinary_differential_equations.h>
 
+#include <chrono>
+using namespace std::chrono;
+
 using std::cout;
 using std::endl;
 
@@ -94,7 +97,62 @@ int main(int argc, char* argv[])
   //--------------------------------------------------
 
   VarFcnBase* vf0 = vf[0];
+  VarFcnBase* vf1 = vf[1];
 
+  double rho = 1.0e-3;
+  double e   = 0.0;
+  double p0 = vf0->GetPressure(rho,e);
+  double p1 = vf1->GetPressure(rho,e);
+  fprintf(stdout,"p0 = %e, p1 = %e.\n", p0, p1);
+  double p   = 1.0e13;
+  double e0 = vf0->GetInternalEnergyPerUnitMass(rho,p);
+  double e1 = vf1->GetInternalEnergyPerUnitMass(rho,p);
+  fprintf(stdout,"e0 = %e, e1 = %e.\n", e0, e1);
+
+  double rho0 = vf0->GetDensity(p,e0);
+  double rho1 = vf1->GetDensity(p,e1);
+  fprintf(stdout,"rho0 = %e, rho1 = %e.\n", rho0, rho1);
+
+  double dpdrho0 = vf0->GetDpdrho(rho,e);
+  double dpdrho1 = vf1->GetDpdrho(rho,e);
+  double drho = 1e-8*rho;
+  double dpdrho2 = (vf1->GetPressure(rho+drho, e) - vf1->GetPressure(rho-drho, e))/(2.0*drho);
+  fprintf(stdout,"dpdrho0 = %e, dpdrho1 = %e, dpdrho2 = %e.\n", dpdrho0, dpdrho1, dpdrho2);
+
+  double Gamma0 = vf0->GetBigGamma(rho,e);
+  double Gamma1 = vf1->GetBigGamma(rho,e);
+  double de = 1.0;
+  double Gamma2 = 1.0/rho*(vf1->GetPressure(rho,e+de)-vf1->GetPressure(rho,e-de))/(2.0*de);
+  fprintf(stdout,"Gamma0 = %e, Gamma1 = %e, Gamma2 = %e.\n", Gamma0, Gamma1, Gamma2);
+  
+/*
+  double h = 5e14;
+  e0 = vf0->GetInternalEnergyPerUnitMassFromEnthalpy(rho,h);
+  e1 = vf1->GetInternalEnergyPerUnitMassFromEnthalpy(rho,h);
+  fprintf(stdout,"[from entropy] e0 = %e, e1 = %e.\n", e0, e1);
+
+  double T0, T1;
+  auto start = high_resolution_clock::now();
+  for(int i=0; i<1000000; i++)
+    T0 = vf0->GetTemperature(rho,e);
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(stop - start);
+  fprintf(stdout,"T0 = %.12e. [Time] %e us.\n", T0, (double)duration.count());
+
+  start = high_resolution_clock::now();
+  for(int i=0; i<1000000; i++)
+    T1 = vf1->GetTemperature(rho,e);
+  stop = high_resolution_clock::now();
+  duration = duration_cast<microseconds>(stop - start);
+  fprintf(stdout,"T1 = %.12e. [Time] %e us.\n", T1, (double)duration.count());
+
+  e0 = vf0->GetInternalEnergyPerUnitMassFromTemperature(rho,T0);
+  e1 = vf1->GetInternalEnergyPerUnitMassFromTemperature(rho,T1);
+  fprintf(stdout,"[from T] e0 = %e, e1 = %e.\n", e0, e1);
+*/
+
+
+/*
   double rho = 3.365839e-4;
   double p = -7.082216e6;
   double e = vf0->GetInternalEnergyPerUnitMass(rho, p);
@@ -103,6 +161,7 @@ int main(int argc, char* argv[])
 
   double c2 = vf0->ComputeSoundSpeedSquare(rho, e);
   fprintf(stdout,"c2 = %e.\n", c2);
+*/
 
 /*
   double rho = 0.998e-3;
